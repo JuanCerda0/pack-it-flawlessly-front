@@ -1,0 +1,25 @@
+<div style="padding: 2rem; font-family: sans-serif;">
+  <h1>Pedidos360</h1>
+
+  <button (click)="login()">Iniciar sesión</button>
+  <button (click)="verSesion()">Ver sesión</button>
+  <button (click)="logout()">Cerrar sesión</button>
+  <button (click)="consultarPedidos()">Consultar pedidos</button>
+
+  @if (autenticado) {
+    <p>Usuario: {{ usuario }}</p>
+    <p style="word-break: break-all;">Token: {{ token }}</p>
+  }
+
+  @if (cargandoPedidos) {
+    <p>Cargando...</p>
+  }
+
+  @if (errorPedidos) {
+    <p style="color: red;">{{ errorPedidos }}</p>
+  }
+
+  @if (pedidos.length > 0) {
+    <pre>{{ pedidos | json }}</pre>
+  }
+</div>
