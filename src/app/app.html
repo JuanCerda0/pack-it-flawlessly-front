@@ -1,25 +1,138 @@
-<div style="padding: 2rem; font-family: sans-serif;">
-  <h1>Pack-it-flawlessly</h1>
+@if (checkingSession()) {
+  <main class="boot-screen"><div class="boot-mark">P</div><span>Preparando tu espacio de trabajo…</span></main>
+} @else if (!authenticated()) {
+  <main class="login-page">
+    <div class="login-orbit orbit-one"></div><div class="login-orbit orbit-two"></div>
+    <section class="login-card">
+      <div class="brand-lockup"><span class="brand-symbol">P</span><span>pack-it<span class="brand-light">flawlessly</span></span></div>
+      <div class="login-art" aria-hidden="true"><div class="art-box"><span>PF</span><i></i><b></b></div><span class="art-spark spark-one">✦</span><span class="art-spark spark-two">✧</span></div>
+      <p class="eyebrow">OPERACIONES · LOGÍSTICA</p>
+      <h1>Todo en su lugar.<br><em>En cada envío.</em></h1>
+      <p class="login-copy">Ingresa al centro de control para seguir paquetes, revisar productos y mantener cada entrega en movimiento.</p>
+      @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+      <button class="button button-primary login-button" type="button" (click)="login()">Iniciar sesión <span>→</span></button>
+      <p class="login-footnote"><span class="secure-dot"></span> Acceso protegido por Amazon Cognito</p>
+    </section>
+    <footer class="login-footer">PACK-IT FLAWLESSLY <span>·</span> CONTROL DE PAQUETES</footer>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand-lockup sidebar-brand" href="#inicio" aria-label="Pack-it-flawlessly inicio">
+        <span class="brand-symbol">P</span><span>pack-it<span class="brand-light">flawlessly</span></span>
+      </a>
+      <div class="side-label">ESPACIO DE TRABAJO</div>
+      <nav class="side-nav" aria-label="Navegación principal">
+        <a class="nav-link active" href="#inicio"><span class="nav-icon">◫</span> Resumen</a>
+        <a class="nav-link" href="#paquetes"><span class="nav-icon">▣</span> Paquetes <span class="nav-count">{{ packages().length }}</span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="help-card"><span class="help-icon">✦</span><strong>Operación en orden</strong><p>Revisa el avance de tus paquetes desde un solo lugar.</p></div>
+        <div class="sidebar-version">PACK-IT · PANEL DE CONTROL</div>
+      </div>
+    </aside>
 
-  <button (click)="login()">Iniciar sesión</button>
-  <button (click)="verSesion()">Ver sesión</button>
-  <button (click)="logout()">Cerrar sesión</button>
-  <button (click)="consultarPedidos()">Consultar pedidos</button>
+    <main class="workspace" id="inicio">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-symbol">P</span><span>pack-it<span class="brand-light">flawlessly</span></span></div>
+        <div class="breadcrumb"><span>Operaciones</span><b>/</b><strong>Resumen</strong></div>
+        <div class="topbar-actions">
+          <button class="icon-button" type="button" aria-label="Actualizar datos" title="Actualizar datos" (click)="refresh()">↻</button>
+          <div class="profile-chip"><span class="avatar">{{ initials }}</span><span class="profile-info"><strong>{{ displayName() }}</strong><small>{{ role() === 'ADMIN' ? 'Administrador' : role() === 'SUPERVISOR' ? 'Supervisor' : 'Sin rol' }}</small></span></div>
+          <button class="text-button" type="button" (click)="logout()">Salir</button>
+        </div>
+      </header>
 
-  @if (autenticado) {
-    <p>Usuario: {{ usuario }}</p>
-    <p style="word-break: break-all;">Token: {{ token }}</p>
+      <section class="page-content">
+        <div class="welcome-row">
+          <div><p class="eyebrow">CENTRO DE CONTROL</p><h1>Buen día, {{ greetingName }} <span class="wave">✳</span></h1><p class="welcome-copy">Aquí tienes el estado actual de tus operaciones.</p></div>
+          @if (isAdmin) { <button class="button button-primary" type="button" (click)="openCreate()"><span class="plus">+</span> Crear paquete</button> }
+        </div>
+
+        @if (error()) { <div class="alert alert-error page-alert"><span>!</span>{{ error() }}<button type="button" aria-label="Cerrar" (click)="error.set('')">×</button></div> }
+        @if (notice()) { <div class="alert alert-success page-alert"><span>✓</span>{{ notice() }}<button type="button" aria-label="Cerrar" (click)="notice.set('')">×</button></div> }
+
+        <section class="metrics-grid" aria-label="Resumen de paquetes">
+          <article class="metric-card metric-total"><div class="metric-top"><span>Total de paquetes</span><span class="metric-icon">▣</span></div><strong>{{ summary()?.totalPackages ?? packages().length }}</strong><small>Registros en el sistema</small></article>
+          <article class="metric-card"><div class="metric-top"><span>Por recibir</span><span class="metric-icon icon-amber">◷</span></div><strong>{{ summary()?.packagesByStatus?.['RECEIVED'] ?? 0 }}</strong><small>Esperando preparación</small></article>
+          <article class="metric-card"><div class="metric-top"><span>En preparación</span><span class="metric-icon icon-blue">⌁</span></div><strong>{{ (summary()?.packagesByStatus?.['PREPARING'] ?? 0) + (summary()?.packagesByStatus?.['READY'] ?? 0) }}</strong><small>En proceso de despacho</small></article>
+          <article class="metric-card"><div class="metric-top"><span>En tránsito</span><span class="metric-icon icon-green">➤</span></div><strong>{{ summary()?.packagesByStatus?.['IN_TRANSIT'] ?? 0 }}</strong><small>Camino a destino</small></article>
+        </section>
+
+        <section class="status-strip" aria-label="Paquetes por estado">
+          <div class="strip-heading"><span class="strip-dot"></span><strong>Flujo de entregas</strong><span class="strip-caption">Vista general por estado</span></div>
+          <div class="flow-stages">
+            @for (status of statuses; track status; let last = $last) {
+              <button type="button" class="flow-stage" [class.flow-selected]="statusFilter() === status" (click)="statusFilter.set(statusFilter() === status ? 'ALL' : status)">
+                <span class="flow-count">{{ summary()?.packagesByStatus?.[status] ?? 0 }}</span><span class="flow-label">{{ statusLabel(status) }}</span>@if (!last) { <span class="flow-arrow">›</span> }
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="packages-panel" id="paquetes">
+          <div class="panel-heading"><div><p class="eyebrow">SEGUIMIENTO</p><h2>Paquetes recientes</h2><p class="panel-subtitle">Consulta cada envío y el detalle de sus productos.</p></div><span class="result-count">{{ filteredPackages().length }} resultados</span></div>
+          <div class="table-toolbar">
+            <label class="search-field"><span>⌕</span><input type="search" placeholder="Buscar por paquete o referencia…" [ngModel]="search()" (ngModelChange)="search.set($event)"></label>
+            <label class="filter-field"><span>Estado</span><select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"><option value="ALL">Todos los estados</option>@for (status of statuses; track status) { <option [value]="status">{{ statusLabel(status) }}</option> }</select></label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>PAQUETE</th><th>REFERENCIA</th><th>PRODUCTOS</th><th>ESTADO</th><th>ACTUALIZADO</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+              <tbody>
+                @for (pkg of filteredPackages(); track trackById($index, pkg)) {
+                  <tr>
+                    <td><button class="package-name" type="button" (click)="openDetails(pkg)"><span class="package-glyph">▧</span><span><strong>{{ pkg.name }}</strong><small>#{{ pkg.id }}</small></span></button></td>
+                    <td><span class="reference-text">{{ pkg.reference || '—' }}</span></td>
+                    <td><span class="product-count">{{ pkg.items.length }} <small>{{ pkg.items.length === 1 ? 'producto' : 'productos' }}</small></span></td>
+                    <td><span class="status-pill" [class]="statusClass(pkg.status)"><i></i>{{ statusLabel(pkg.status) }}</span></td>
+                    <td><span class="date-text">{{ pkg.updatedAt | date:'dd MMM, HH:mm' }}</span></td>
+                    <td><button class="row-action" type="button" [attr.aria-label]="'Ver ' + pkg.name" (click)="openDetails(pkg)">→</button></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6"><div class="empty-state"><span>▣</span><strong>{{ loading() ? 'Cargando paquetes…' : 'No hay paquetes para mostrar' }}</strong><small>{{ statusFilter() !== 'ALL' || search() ? 'Prueba con otra búsqueda o filtro.' : 'Actualiza la lista o crea el primer paquete.' }}</small></div></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="panel-footer"><span><i class="secure-dot"></i> Datos sincronizados con Pack-it API</span><button class="refresh-link" type="button" (click)="refresh()">Actualizar lista ↻</button></div>
+        </section>
+        <footer class="page-footer">Pack-it-flawlessly <span>·</span> Gestión clara para cada entrega</footer>
+      </section>
+    </main>
+  </div>
+
+  @if (modal()) {
+    <div class="modal-backdrop" (click)="closeModal()" (keydown.escape)="closeModal()">
+      @if (modal() === 'create' || modal() === 'edit') {
+        <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="package-dialog-title" (click)="$event.stopPropagation()">
+          <div class="dialog-header"><div><p class="eyebrow">{{ modal() === 'create' ? 'NUEVO REGISTRO' : 'ACTUALIZAR DATOS' }}</p><h2 id="package-dialog-title">{{ modal() === 'create' ? 'Crear paquete' : 'Editar paquete' }}</h2></div><button type="button" class="close-button" aria-label="Cerrar" (click)="closeModal()">×</button></div>
+          <form class="dialog-form" (ngSubmit)="savePackage()">
+            <label>Nombre del paquete<input name="name" required maxlength="120" [(ngModel)]="packageForm.name" placeholder="Ej. Pedido de cocina y hogar"></label>
+            <label>Referencia <span class="optional">OPCIONAL</span><input name="reference" maxlength="80" [(ngModel)]="packageForm.reference" placeholder="Ej. PF-2026-010"></label>
+            <label>Descripción <span class="optional">OPCIONAL</span><textarea name="description" maxlength="1000" rows="3" [(ngModel)]="packageForm.description" placeholder="Agrega un detalle para identificar el envío"></textarea></label>
+            @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+            <div class="dialog-actions"><button class="button button-quiet" type="button" (click)="closeModal()">Cancelar</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Guardando…' : modal() === 'create' ? 'Crear paquete' : 'Guardar cambios' }}</button></div>
+          </form>
+        </section>
+      } @else if (selectedPackage(); as pkg) {
+        <section class="dialog detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-title" (click)="$event.stopPropagation()">
+          <div class="dialog-header"><div><p class="eyebrow">DETALLE DEL ENVÍO · #{{ pkg.id }}</p><h2 id="detail-title">{{ pkg.name }}</h2></div><button type="button" class="close-button" aria-label="Cerrar" (click)="closeModal()">×</button></div>
+          <div class="detail-meta"><span class="status-pill" [class]="statusClass(pkg.status)"><i></i>{{ statusLabel(pkg.status) }}</span><span>{{ pkg.reference || 'Sin referencia' }}</span><span>{{ pkg.items.length }} {{ pkg.items.length === 1 ? 'producto' : 'productos' }}</span></div>
+          @if (pkg.description) { <p class="detail-description">{{ pkg.description }}</p> }
+          <div class="detail-section-heading"><div><h3>Productos del paquete</h3><p>Elementos incluidos en este envío.</p></div>@if (isAdmin && pkg.status !== 'ARCHIVED' && !itemEditorOpen) { <button class="button button-soft" type="button" (click)="openAddItem()">+ Agregar</button> }</div>
+          @if (isAdmin && pkg.status !== 'ARCHIVED' && itemEditorOpen) {
+            <form class="item-editor" (ngSubmit)="saveItem()"><div class="item-editor-title">{{ editingItemId === null ? 'Nuevo producto' : 'Corregir producto' }}</div><div class="item-form-grid"><label>Producto<input name="productName" required maxlength="160" [(ngModel)]="itemForm.productName" placeholder="Nombre del producto"></label><label>SKU <span class="optional">OPCIONAL</span><input name="sku" maxlength="80" [(ngModel)]="itemForm.sku" placeholder="SKU"></label><label class="quantity-field">Cant.<input name="quantity" type="number" min="1" required [(ngModel)]="itemForm.quantity"></label></div><div class="item-editor-actions"><button type="button" class="text-button" (click)="cancelItemEdit()">Cancelar</button><button class="button button-primary button-small" type="submit" [disabled]="saving()">{{ saving() ? 'Guardando…' : 'Guardar producto' }}</button></div></form>
+          }
+          <div class="item-list">
+            @for (item of pkg.items; track item.id) {
+              <article class="item-row"><span class="item-avatar">{{ item.productName.slice(0, 1).toUpperCase() }}</span><span class="item-info"><strong>{{ item.productName }}</strong><small>{{ item.sku || 'Sin SKU' }} · Cantidad {{ item.quantity }}</small></span>@if (isAdmin && pkg.status !== 'ARCHIVED') { <button class="item-edit" type="button" aria-label="Editar producto" (click)="prepareItemEdit(item)">Editar</button> }</article>
+            } @empty { <div class="items-empty">Este paquete aún no tiene productos.</div> }
+          </div>
+          @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+          <div class="detail-bottom"><div class="detail-dates"><span>Creado {{ pkg.createdAt | date:'dd MMM yyyy' }}</span><span>Actualizado {{ pkg.updatedAt | date:'dd MMM yyyy, HH:mm' }}</span></div><div class="detail-actions">@if (isAdmin) { @if (pkg.status !== 'ARCHIVED') { <button type="button" class="button button-quiet" (click)="openEdit(pkg)">Editar paquete</button> } @if (nextStatus(pkg.status); as next) { <button type="button" class="button button-primary" (click)="advanceStatus(pkg)">Avanzar a {{ statusLabel(next) }} →</button> } @if (pkg.status !== 'ARCHIVED') { <button type="button" class="archive-link" (click)="archivePackage(pkg)">Archivar</button> } } @else { <span class="read-only-note">Vista de solo lectura</span> }</div></div>
+        </section>
+      }
+    </div>
   }
-
-  @if (cargandoPedidos) {
-    <p>Cargando...</p>
-  }
-
-  @if (errorPedidos) {
-    <p style="color: red;">{{ errorPedidos }}</p>
-  }
-
-  @if (pedidos.length > 0) {
-    <pre>{{ pedidos | json }}</pre>
-  }
-</div>
+}
