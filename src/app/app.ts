@@ -16,7 +16,7 @@ import { Pedidos } from './pedidos';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('pedidos360-front');
+  protected readonly title = signal('Pack-it-flawlessly');
 
   usuario = '';
   token = '';

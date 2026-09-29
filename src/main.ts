@@ -6,16 +6,16 @@ import { Amplify } from 'aws-amplify';
 Amplify.configure({
   Auth: {
     Cognito: {
-      userPoolId: 'us-east-1_jLX2TXZjN',
-      userPoolClientId: '4vhn242cnbnjqdi9uupf9qpt16',
+      userPoolId: 'us-east-1_vidDVo9o0',
+      userPoolClientId: '94eeoi7jbi4vdp80oeb81992l',
       loginWith: {
         oauth: {
-          domain: 'us-east-1jlx2txzjn.auth.us-east-1.amazoncognito.com',
+          domain: 'us-east-1viddvo9o0.auth.us-east-1.amazoncognito.com',
           scopes: [
             'email',
             'openid',
             'profile',
-            'pedidos360-api/pedidos-api-read'
+            'packit-api/read'
           ],
           redirectSignIn: ['http://localhost:4200'],
           redirectSignOut: ['http://localhost:4200'],

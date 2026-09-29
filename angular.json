@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "pedidos360-front": {
+    "pack-it-flawlessly-frontend": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -56,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "pedidos360-front:build:production"
+              "buildTarget": "pack-it-flawlessly-frontend:build:production"
             },
             "development": {
-              "buildTarget": "pedidos360-front:build:development"
+              "buildTarget": "pack-it-flawlessly-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
