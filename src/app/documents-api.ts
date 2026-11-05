@@ -22,6 +22,7 @@ export class DocumentsApi {
 
   getFile(documentId: number): Observable<Blob> {
     return this.http.get(`${apiRoots.documents}/documents/${documentId}/file`, {
+      headers: { Accept: 'application/pdf' },
       responseType: 'blob'
     });
   }

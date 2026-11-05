@@ -34,6 +34,7 @@ describe('Historial y Documentos API', () => {
     api.getFile(8).subscribe(file => expect(file).toBe(pdf));
     const request = http.expectOne(`${apiRoots.documents}/documents/8/file`);
     expect(request.request.responseType).toBe('blob');
+    expect(request.request.headers.get('Accept')).toBe('application/pdf');
     request.flush(pdf);
   });
 });
