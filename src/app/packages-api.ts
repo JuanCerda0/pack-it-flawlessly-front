@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
+import { apiRoots } from './api-endpoints';
 
 export type PackageStatus =
   | 'RECEIVED'
@@ -45,7 +46,7 @@ export interface ItemPayload {
   quantity: number;
 }
 
-const API_ROOT = 'https://2wk43coz5b.execute-api.us-east-1.amazonaws.com/Dev/api/v1';
+const API_ROOT = apiRoots.packages;
 
 @Injectable({ providedIn: 'root' })
 export class PackagesApi {
