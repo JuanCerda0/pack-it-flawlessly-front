@@ -2,6 +2,8 @@ import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { fetchAuthSession, getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
+import { DocumentsPage } from './documents-page';
+import { HistoryPage } from './history-page';
 import {
   ItemPayload,
   PackageItem,
@@ -13,10 +15,11 @@ import {
 } from './packages-api';
 
 type ModalMode = 'create' | 'edit' | 'details' | null;
+type View = 'dashboard' | 'history' | 'documents';
 
 @Component({
   selector: 'app-root',
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, HistoryPage, DocumentsPage],
   templateUrl: './app.html'
 })
 export class App implements OnInit {
@@ -37,6 +40,8 @@ export class App implements OnInit {
   readonly notice = signal('');
   readonly modal = signal<ModalMode>(null);
   readonly selectedPackage = signal<PackagedOrder | null>(null);
+  readonly view = signal<View>('dashboard');
+  readonly initialPackageId = signal<number | null>(null);
   readonly search = signal('');
   readonly statusFilter = signal<'ALL' | PackageStatus>('ALL');
   readonly filteredPackages = computed(() => {
@@ -96,6 +101,18 @@ export class App implements OnInit {
 
   refresh(): void {
     this.loadDashboard();
+  }
+
+  navigate(view: View, packageId: number | null = null): void {
+    this.initialPackageId.set(packageId);
+    this.view.set(view);
+    this.closeModal();
+  }
+
+  viewLabel(): string {
+    if (this.view() === 'history') return 'Historial';
+    if (this.view() === 'documents') return 'Documentos';
+    return 'Resumen';
   }
 
   openDetails(pkg: PackagedOrder): void {
@@ -332,6 +349,8 @@ export class App implements OnInit {
     this.packages.set([]);
     this.summary.set(null);
     this.selectedPackage.set(null);
+    this.view.set('dashboard');
+    this.initialPackageId.set(null);
     this.closeModal();
   }
 
