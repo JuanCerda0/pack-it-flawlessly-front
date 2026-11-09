@@ -1,0 +1,40 @@
+<section class="feature-page" aria-labelledby="documents-title">
+  <div class="feature-heading">
+    <div><p class="eyebrow">COMPROBANTES</p><h1 id="documents-title">Documentos del paquete</h1><p>Consulta los comprobantes de ingreso y despacho generados al cambiar el estado.</p></div>
+  </div>
+  <div class="feature-panel">
+    <div class="feature-toolbar">
+      <label>Paquete
+        <select [ngModel]="selectedId()" (ngModelChange)="selectPackage($event)" [disabled]="packages.length === 0">
+          <option [ngValue]="null">Selecciona un paquete</option>
+          @for (pkg of packages; track pkg.id) { <option [ngValue]="pkg.id">#{{ pkg.id }} · {{ pkg.name }}</option> }
+        </select>
+      </label>
+      <button class="button button-soft" type="button" (click)="refresh()" [disabled]="selectedId() === null || loading()">Actualizar ↻</button>
+    </div>
+    @if (error()) { <div class="alert alert-error feature-alert" role="alert">{{ error() }}</div> }
+    @if (packages.length === 0) {
+      <div class="feature-empty">Aún no hay paquetes para consultar.</div>
+    } @else if (selectedId() === null) {
+      <div class="feature-empty">Elige un paquete para ver sus comprobantes.</div>
+    } @else if (loading()) {
+      <div class="feature-empty" aria-live="polite">Cargando documentos…</div>
+    } @else if (!error()) {
+      @if (documents().length === 0) {
+        <div class="feature-empty">Todavía no hay comprobantes. Tras pasar a Preparación o Listo, actualiza en unos segundos.</div>
+      } @else {
+        <div class="document-list">
+          @for (document of documents(); track document.id) {
+            <article class="document-card">
+              <span class="document-icon" aria-hidden="true">▤</span>
+              <div class="document-info"><strong>{{ document.documentNumber }}</strong><span>{{ typeLabel(document.documentType) }} · Generado {{ document.generatedAt | date:'dd MMM yyyy, HH:mm' }}</span></div>
+              <button class="button button-soft" type="button" (click)="download(document)" [disabled]="downloadingId() !== null" [attr.aria-label]="'Descargar ' + document.documentNumber">
+                {{ downloadingId() === document.id ? 'Descargando…' : 'Descargar PDF' }}
+              </button>
+            </article>
+          }
+        </div>
+      }
+    }
+  </div>
+</section>

@@ -1,59 +1,26 @@
 # Pack-it-flawlessly Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+Angular application for managing packages and consulting their history and PDF documents. Sign-in uses the configured Cognito Hosted UI. The frontend reads `cognito:groups` from the access token: `ADMIN` sees package management actions; `SUPERVISOR` has read-only access. Spring services validate the same token and enforce authorization.
 
-## Development server
-
-To start a local development server, run:
+## Run locally
 
 ```bash
-ng serve
+npm ci
+npm start
+npm test -- --watch=false
+npm run build
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open `http://localhost:4200/?api=local` to call local Paquetes (`8080`), Historial (`8082`) and Documentos (`8083`). Run the services and their PostgreSQL/RabbitMQ dependencies first. The choice is saved in the tab's session storage, so Cognito's redirect back to `/` keeps it. Open `http://localhost:4200/?api=gateway` to switch back to the configured API Gateway stage. Both modes use the Cognito access token through `auth.interceptor.ts`.
 
-## Code scaffolding
+The Gateway stage still needs routes and integrations for Historial and Documentos before those views work in `gateway` mode. Use `local` mode while developing them. The frontend runs locally in both modes.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Main files
 
-```bash
-ng generate component component-name
-```
+- `src/app/app.ts` and `app.html`: session, role-aware package panel, and navigation.
+- `src/app/api-endpoints.ts`: local/Gateway API roots.
+- `src/app/packages-api.ts`, `history-api.ts`, `documents-api.ts`: REST contracts.
+- `src/app/history-page.*`, `documents-page.*`: read-only views and PDF download.
+- `src/main.ts`: Cognito and OAuth configuration.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Do not commit tokens, `.env.local`, or AWS private keys.

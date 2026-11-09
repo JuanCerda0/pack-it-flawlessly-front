@@ -1,0 +1,43 @@
+<section class="feature-page" aria-labelledby="history-title">
+  <div class="feature-heading">
+    <div><p class="eyebrow">TRAZABILIDAD</p><h1 id="history-title">Historial de paquetes</h1><p>Revisa qué cambió, cuándo ocurrió y quién realizó la operación.</p></div>
+  </div>
+  <div class="feature-panel">
+    <div class="feature-toolbar">
+      <label>Paquete
+        <select [ngModel]="selectedId()" (ngModelChange)="selectPackage($event)" [disabled]="packages.length === 0">
+          <option [ngValue]="null">Selecciona un paquete</option>
+          @for (pkg of packages; track pkg.id) { <option [ngValue]="pkg.id">#{{ pkg.id }} · {{ pkg.name }}</option> }
+        </select>
+      </label>
+      <button class="button button-soft" type="button" (click)="refresh()" [disabled]="selectedId() === null || loading()">Actualizar ↻</button>
+    </div>
+    @if (error()) { <div class="alert alert-error feature-alert" role="alert">{{ error() }}</div> }
+    @if (packages.length === 0) {
+      <div class="feature-empty">Aún no hay paquetes para consultar.</div>
+    } @else if (selectedId() === null) {
+      <div class="feature-empty">Elige un paquete para ver sus cambios.</div>
+    } @else if (loading()) {
+      <div class="feature-empty" aria-live="polite">Cargando historial…</div>
+    } @else if (!error()) {
+      @if (entries().length === 0) {
+        <div class="feature-empty">Todavía no hay eventos. Si acabas de modificar el paquete, actualiza en unos segundos.</div>
+      } @else {
+        <ol class="history-list">
+          @for (entry of entries(); track entry.eventId) {
+            <li class="history-entry">
+              <span class="history-marker" aria-hidden="true"></span>
+              <div class="history-card">
+                <div class="history-card-heading"><strong>{{ eventLabel(entry.type) }}</strong><time>{{ entry.occurredAt | date:'dd MMM yyyy, HH:mm:ss' }}</time></div>
+                <p class="history-actor">Usuario: {{ entry.actorId || 'Sistema' }}</p>
+                @for (change of changes(entry); track change.field) {
+                  <div class="history-change"><span>{{ fieldLabel(change.field) }}</span><del>{{ valueLabel(change.before) }}</del><b aria-hidden="true">→</b><ins>{{ valueLabel(change.after) }}</ins></div>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    }
+  </div>
+</section>

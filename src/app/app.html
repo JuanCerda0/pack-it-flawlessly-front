@@ -18,13 +18,14 @@
 } @else {
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand-lockup sidebar-brand" href="#inicio" aria-label="Pack-it-flawlessly inicio">
+      <a class="brand-lockup sidebar-brand" href="#inicio" aria-label="Pack-it-flawlessly inicio" (click)="navigate('dashboard')">
         <span class="brand-symbol">P</span><span>pack-it<span class="brand-light">flawlessly</span></span>
       </a>
       <div class="side-label">ESPACIO DE TRABAJO</div>
       <nav class="side-nav" aria-label="Navegación principal">
-        <a class="nav-link active" href="#inicio"><span class="nav-icon">◫</span> Resumen</a>
-        <a class="nav-link" href="#paquetes"><span class="nav-icon">▣</span> Paquetes <span class="nav-count">{{ packages().length }}</span></a>
+        <button class="nav-link" [class.active]="view() === 'dashboard'" type="button" (click)="navigate('dashboard')"><span class="nav-icon">◫</span> Resumen y paquetes <span class="nav-count">{{ packages().length }}</span></button>
+        <button class="nav-link" [class.active]="view() === 'history'" type="button" (click)="navigate('history')"><span class="nav-icon">◷</span> Historial</button>
+        <button class="nav-link" [class.active]="view() === 'documents'" type="button" (click)="navigate('documents')"><span class="nav-icon">▤</span> Documentos</button>
       </nav>
       <div class="sidebar-bottom">
         <div class="help-card"><span class="help-icon">✦</span><strong>Operación en orden</strong><p>Revisa el avance de tus paquetes desde un solo lugar.</p></div>
@@ -35,15 +36,26 @@
     <main class="workspace" id="inicio">
       <header class="topbar">
         <div class="mobile-brand"><span class="brand-symbol">P</span><span>pack-it<span class="brand-light">flawlessly</span></span></div>
-        <div class="breadcrumb"><span>Operaciones</span><b>/</b><strong>Resumen</strong></div>
+        <div class="breadcrumb"><span>Operaciones</span><b>/</b><strong>{{ viewLabel() }}</strong></div>
         <div class="topbar-actions">
-          <button class="icon-button" type="button" aria-label="Actualizar datos" title="Actualizar datos" (click)="refresh()">↻</button>
+          @if (view() === 'dashboard') { <button class="icon-button" type="button" aria-label="Actualizar datos" title="Actualizar datos" (click)="refresh()">↻</button> }
           <div class="profile-chip"><span class="avatar">{{ initials }}</span><span class="profile-info"><strong>{{ displayName() }}</strong><small>{{ role() === 'ADMIN' ? 'Administrador' : role() === 'SUPERVISOR' ? 'Supervisor' : 'Sin rol' }}</small></span></div>
           <button class="text-button" type="button" (click)="logout()">Salir</button>
         </div>
       </header>
 
+      <nav class="mobile-nav" aria-label="Navegación principal móvil">
+        <button [class.active]="view() === 'dashboard'" type="button" (click)="navigate('dashboard')">Paquetes</button>
+        <button [class.active]="view() === 'history'" type="button" (click)="navigate('history')">Historial</button>
+        <button [class.active]="view() === 'documents'" type="button" (click)="navigate('documents')">Documentos</button>
+      </nav>
+
       <section class="page-content">
+        @if (view() === 'history') {
+          <app-history-page [packages]="packages()" [initialPackageId]="initialPackageId()" />
+        } @else if (view() === 'documents') {
+          <app-documents-page [packages]="packages()" [initialPackageId]="initialPackageId()" />
+        } @else {
         <div class="welcome-row">
           <div><p class="eyebrow">CENTRO DE CONTROL</p><h1>Buen día, {{ greetingName }} <span class="wave">✳</span></h1><p class="welcome-copy">Aquí tienes el estado actual de tus operaciones.</p></div>
           @if (isAdmin) { <button class="button button-primary" type="button" (click)="openCreate()"><span class="plus">+</span> Crear paquete</button> }
@@ -98,6 +110,7 @@
           <div class="panel-footer"><span><i class="secure-dot"></i> Datos sincronizados con Pack-it API</span><button class="refresh-link" type="button" (click)="refresh()">Actualizar lista ↻</button></div>
         </section>
         <footer class="page-footer">Pack-it-flawlessly <span>·</span> Gestión clara para cada entrega</footer>
+        }
       </section>
     </main>
   </div>
@@ -129,6 +142,7 @@
               <article class="item-row"><span class="item-avatar">{{ item.productName.slice(0, 1).toUpperCase() }}</span><span class="item-info"><strong>{{ item.productName }}</strong><small>{{ item.sku || 'Sin SKU' }} · Cantidad {{ item.quantity }}</small></span>@if (isAdmin && pkg.status !== 'ARCHIVED') { <button class="item-edit" type="button" aria-label="Editar producto" (click)="prepareItemEdit(item)">Editar</button> }</article>
             } @empty { <div class="items-empty">Este paquete aún no tiene productos.</div> }
           </div>
+          <div class="detail-links"><button class="button button-soft" type="button" (click)="navigate('history', pkg.id)">Ver historial</button><button class="button button-soft" type="button" (click)="navigate('documents', pkg.id)">Ver documentos</button></div>
           @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
           <div class="detail-bottom"><div class="detail-dates"><span>Creado {{ pkg.createdAt | date:'dd MMM yyyy' }}</span><span>Actualizado {{ pkg.updatedAt | date:'dd MMM yyyy, HH:mm' }}</span></div><div class="detail-actions">@if (isAdmin) { @if (pkg.status !== 'ARCHIVED') { <button type="button" class="button button-quiet" (click)="openEdit(pkg)">Editar paquete</button> } @if (nextStatus(pkg.status); as next) { <button type="button" class="button button-primary" (click)="advanceStatus(pkg)">Avanzar a {{ statusLabel(next) }} →</button> } @if (pkg.status !== 'ARCHIVED') { <button type="button" class="archive-link" (click)="archivePackage(pkg)">Archivar</button> } } @else { <span class="read-only-note">Vista de solo lectura</span> }</div></div>
         </section>
